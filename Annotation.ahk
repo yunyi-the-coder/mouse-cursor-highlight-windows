@@ -40,7 +40,7 @@ GetDimensionAcrossAllMonitors(){
 	HeightAcrossAllMonitors := MaxYOfAllMonitors - MinYOfAllMonitors
 }
 
-CreateOneAnnotationWindowForDrawingLines()
+CreateAnnotationCanvasWindow()
 {
 	global
 	GetDimensionAcrossAllMonitors()
@@ -53,24 +53,24 @@ CreateOneAnnotationWindowForDrawingLines()
 	}
 
 	; Create a layered window (+E0x80000), and it must be used with UpdateLayeredWindow() to trigger repaint.
-	Gui, LineAnnotationWindow: +AlwaysOnTop -Caption +ToolWindow +E0x80000 +hwndLineAnnotationWindowHwnd	
+	Gui, AnnotationCanvasWindow: +AlwaysOnTop -Caption +ToolWindow +E0x80000 +hwndAnnotationCanvasWindowHwnd	
 	; Show the line drawing window
-	Gui, LineAnnotationWindow: Show, x%MinXOfAllMonitors% y%MinYOfAllMonitors%, w%WidthAcrossAllMonitors%, h%HeightAcrossAllMonitors%
+	Gui, AnnotationCanvasWindow: Show, x%MinXOfAllMonitors% y%MinYOfAllMonitors%, w%WidthAcrossAllMonitors%, h%HeightAcrossAllMonitors%
 
 	; Create a gdi bitmap that we are going to draw onto.
-	LineAnnotationWindowHbm := CreateDIBSection(WidthAcrossAllMonitors, HeightAcrossAllMonitors)
+	AnnotationCanvasWindowHbm := CreateDIBSection(WidthAcrossAllMonitors, HeightAcrossAllMonitors)
 
 	; Get a device context compatible with the screen
-	LineAnnotationWindowHdc := CreateCompatibleDC()
+	AnnotationCanvasWindowHdc := CreateCompatibleDC()
 
 	; Select the bitmap into the device context
-	local obm := SelectObject(LineAnnotationWindowHdc, lineAnnotationWindowHbm)
+	local obm := SelectObject(AnnotationCanvasWindowHdc, AnnotationCanvasWindowHbm)
 
 	; Get a pointer to the graphics of the bitmap
-	LineAnnotationWindowGraphics := Gdip_GraphicsFromHDC(LineAnnotationWindowHdc)
+	AnnotationCanvasWindowGraphics := Gdip_GraphicsFromHDC(AnnotationCanvasWindowHdc)
 
 	; Set the smoothing mode to antialias = 4 to make shapes appear smother
-	Gdip_SetSmoothingMode(LineAnnotationWindowGraphics, 4)
+	Gdip_SetSmoothingMode(AnnotationCanvasWindowGraphics, 4)
 
 	; Hide cursor spotlight window and key stroke osd window before taking the screenshot
 	Gui, CursorSpotlightWindow: Hide
@@ -83,16 +83,26 @@ CreateOneAnnotationWindowForDrawingLines()
 	SelectObject(hdc_buffer, hbm_buffer)
 	BitBlt(hdc_buffer, 0, 0, WidthAcrossAllMonitors, HeightAcrossAllMonitors, hdc_screen, MinXOfAllMonitors, MinYOfAllMonitors, 0x00CC0020)
 
+	; Show cursor spotlight window after taking the screenshot
+	if (Config.cursorSpotlight.enabled == "True" && Config.annotation.annotationShowSpotlightWhenDrawing == "True")
+	{
+		Gui, CursorSpotlightWindow: Show
+	}
+
 	; Copy pixels from the buffer to the line annotation window.
-	BitBlt(LineAnnotationWindowHdc, 0, 0, WidthAcrossAllMonitors, HeightAcrossAllMonitors, hdc_buffer, 0, 0, 0x00CC0020)
-	UpdateLayeredWindow(LineAnnotationWindowHwnd, LineAnnotationWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
+	BitBlt(AnnotationCanvasWindowHdc, 0, 0, WidthAcrossAllMonitors, HeightAcrossAllMonitors, hdc_buffer, 0, 0, 0x00CC0020)
+	UpdateLayeredWindow(AnnotationCanvasWindowHwnd, AnnotationCanvasWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
 
 	; Create the pen to draw line annotations
-	local annotationAlphaRGB := Round(Config.annotation.annotationLineAlpha/2) << 24 | Config.annotation.annotationLineColor
+	local annotationAlphaRGB := Config.annotation.annotationLineAlpha << 24 | Config.annotation.annotationLineColor
 	LineAnnotationPen := Gdip_CreatePen(annotationAlphaRGB, Config.annotation.annotationLineWidth) 
+
+	; Create the pen to draw rectangle annotations
+	local annotationAlphaRGB := Config.annotation.annotationRectangleBorderAlpha << 24 | Config.annotation.annotationRectangleBorderColor
+	RectangleAnnotationPen := Gdip_CreatePen(annotationAlphaRGB, Config.annotation.annotationRectangleBorderWidth) 
 }
 
-CreateOneAnnotationWindowForDrawingRectangle()
+CreateAnnotationTemporaryShapeWindow()
 {
 	global
 	; Start gdi+
@@ -104,49 +114,50 @@ CreateOneAnnotationWindowForDrawingRectangle()
 	}
 
 	; Create a layered window (+E0x80000), and it must be used with UpdateLayeredWindow() to trigger repaint.
-	Gui, RectangleAnnotationWindow: +AlwaysOnTop -Caption +ToolWindow +E0x80000 +hwndRectangleAnnotationWindowHwnd
-	Gui, RectangleAnnotationWindow: Show, x%MinXOfAllMonitors% y%MinYOfAllMonitors%, w%WidthAcrossAllMonitors%, h%HeightAcrossAllMonitors%
+	Gui, AnnotationTemporaryShapeWindow: +AlwaysOnTop -Caption +ToolWindow +E0x80000 +hwndAnnotationTemporaryShapeWindowHwnd
+	Gui, AnnotationTemporaryShapeWindow: Show, x%MinXOfAllMonitors% y%MinYOfAllMonitors%, w%WidthAcrossAllMonitors%, h%HeightAcrossAllMonitors%
 
 	; Create a gdi bitmap that we are going to draw onto.
-	RectangleAnnotationWindowHbm := CreateDIBSection(WidthAcrossAllMonitors, HeightAcrossAllMonitors)
+	AnnotationTemporaryShapeWindowHbm := CreateDIBSection(WidthAcrossAllMonitors, HeightAcrossAllMonitors)
 
 	; Get a device context compatible with the screen
-	RectangleAnnotationWindowHdc := CreateCompatibleDC()
+	AnnotationTemporaryShapeWindowHdc := CreateCompatibleDC()
 
 	; Select the bitmap into the device context
-	local obm := SelectObject(RectangleAnnotationWindowHdc, RectangleAnnotationWindowHbm)
+	local obm := SelectObject(AnnotationTemporaryShapeWindowHdc, AnnotationTemporaryShapeWindowHbm)
 
 	; Get a pointer to the graphics of the bitmap
-	RectangleAnnotationWindowGraphics := Gdip_GraphicsFromHDC(RectangleAnnotationWindowHdc)
+	AnnotationTemporaryShapeWindowGraphics := Gdip_GraphicsFromHDC(AnnotationTemporaryShapeWindowHdc)
 
 	; Set the smoothing mode to antialias = 4 to make shapes appear smother
-	Gdip_SetSmoothingMode(RectangleAnnotationWindowGraphics, 4)
+	Gdip_SetSmoothingMode(AnnotationTemporaryShapeWindowGraphics, 4)
 
-	; Create the pen to draw line annotations
-	local annotationAlphaRGB := Config.annotation.annotationRectangleBorderAlpha << 24 | Config.annotation.annotationRectangleBorderColor
-	RectangleAnnotationPen := Gdip_CreatePen(annotationAlphaRGB, Config.annotation.annotationRectangleBorderWidth) 
+	; Create the pen to draw line annotations with half of the alpha on the AnnotationTemporaryShapeWindow
+	local annotationAlphaRGB := Round(Config.annotation.annotationLineAlpha/2) << 24 | Config.annotation.annotationLineColor
+	LineAnnotationPenForTemporaryShape := Gdip_CreatePen(annotationAlphaRGB, Config.annotation.annotationLineWidth) 
 
 	Return
 }
 
-DestroyLineAnnotationWindow()
+DestroyAnnotationCanvasWindow()
 {
 	global
 	; Destory the line annotation window
-	DeleteDC(LineAnnotationWindowHdc)
-	DeleteObject(LineAnnotationWindowHbm) 
+	DeleteDC(AnnotationCanvasWindowHdc)
+	DeleteObject(AnnotationCanvasWindowHbm) 
 	Gdip_DeletePen(LineAnnotationPen)
-	Gui, LineAnnotationWindow: Destroy
+	Gdip_DeletePen(LineAnnotationPenForTemporaryShape)
+	Gui, AnnotationCanvasWindow: Destroy
 }
 
-DestroyRectangleAnnotationWindow()
+DestroyAnnotationTemporaryShapeWindow()
 {	
 	global
 	; Destory the rectangle annotation window
-	DeleteDC(RectangleAnnotationWindowHdc)
-	DeleteObject(RectangleAnnotationWindowHbm) 
+	DeleteDC(AnnotationTemporaryShapeWindowHdc)
+	DeleteObject(AnnotationTemporaryShapeWindowHbm) 
 	Gdip_DeletePen(RectangleAnnotationPen)
-	Gui, RectangleAnnotationWindow: Destroy
+	Gui, AnnotationTemporaryShapeWindow: Destroy
 }
 
 ResetVariablesForLineDrawing()
@@ -157,7 +168,7 @@ ResetVariablesForLineDrawing()
 	SecondPreviousLineAnnotationMousePositionY := ""
 	PreviousLineAnnotationMousePositionX := ""
 	PreviousLineAnnotationMousePositionY := ""
-	HasDrawnLineAnnotationFirstSegment := False
+	AllPointsInCursorTrace := ""
 }
 
 ResetVariablesForRectangleDrawing()
@@ -180,17 +191,17 @@ SwitchAnnotationDrawingMode(modeToToggle)
 		}
 		if (CurrentAnnotationMode == "RectangleAnnotation")
 		{
-			; If it's drawing rectangle, it means the window for line drawing and the window for drawing rectange are both open now.			
-			SetTimer, DRAW_RECTANGLE_ANNOTATION, Off 			
-			DestroyRectangleAnnotationWindow()	
+			; If it's drawing rectangle, we can turn off DRAW_RECTANGLE_ANNOTATION timer and turn on DRAW_LINE_ANNOTATION timer.
+			SetTimer, DRAW_RECTANGLE_ANNOTATION, Off 						
 			ResetVariablesForLineDrawing()
 			SetTimer, DRAW_LINE_ANNOTATION, 10
 			CurrentAnnotationMode := "LineAnnotation"
 		}
 		if (CurrentAnnotationMode == "Off")
 		{
-			; If it's in the "Off" state, it means no annotation window is open at the moment.
-			CreateOneAnnotationWindowForDrawingLines()
+			; If it's in the "Off" state, it means no annotation window is open at the moment. We need to create the necessary windows.
+			CreateAnnotationCanvasWindow()
+			CreateAnnotationTemporaryShapeWindow()
 			ResetVariablesForLineDrawing()
 			SetTimer, DRAW_LINE_ANNOTATION, 10
 			CurrentAnnotationMode := "LineAnnotation"
@@ -201,9 +212,8 @@ SwitchAnnotationDrawingMode(modeToToggle)
 	{
 		if (CurrentAnnotationMode == "LineAnnotation")
 		{
-			; If it's drawing lines, it means the window for line drawing is already open. We only need to display the rectangle drawing window			
-			SetTimer, DRAW_LINE_ANNOTATION, Off
-			CreateOneAnnotationWindowForDrawingRectangle()
+			; If it's drawing lines, we can turn off DRAW_LINE_ANNOTATION timer and turn on DRAW_RECTANGLE_ANNOTATION timer.
+			SetTimer, DRAW_LINE_ANNOTATION, Off			
 			ResetVariablesForRectangleDrawing()
 			SetTimer, DRAW_RECTANGLE_ANNOTATION, 10
 			CurrentAnnotationMode := "RectangleAnnotation"
@@ -215,9 +225,9 @@ SwitchAnnotationDrawingMode(modeToToggle)
 		if (CurrentAnnotationMode == "Off")
 		{
 			; If it's in the "Off" state, it means no annotation window is open at the moment. We need to create the necessary windows.
-			CreateOneAnnotationWindowForDrawingLines()
-			CreateOneAnnotationWindowForDrawingRectangle()
-			ResetVariablesForRectangleDrawing()		
+			CreateAnnotationCanvasWindow()
+			CreateAnnotationTemporaryShapeWindow()
+			ResetVariablesForRectangleDrawing()
 			SetTimer, DRAW_RECTANGLE_ANNOTATION, 10
 			CurrentAnnotationMode := "RectangleAnnotation"
 		}
@@ -225,16 +235,15 @@ SwitchAnnotationDrawingMode(modeToToggle)
 
 	if (modeToToggle == "Off")
 	{
-		SetTimer, DRAW_RECTANGLE_ANNOTATION, Off
-		SetTimer, DRAW_LINE_ANNOTATION, Off
-		DestroyRectangleAnnotationWindow()
-		DestroyLineAnnotationWindow()
-
 		; Show cursor spotlight window after we finish drawing
 		if (Config.cursorSpotlight.enabled == "True")
 		{
 			Gui, CursorSpotlightWindow: Show
 		}
+		SetTimer, DRAW_RECTANGLE_ANNOTATION, Off
+		SetTimer, DRAW_LINE_ANNOTATION, Off
+		DestroyAnnotationTemporaryShapeWindow()
+		DestroyAnnotationCanvasWindow()
 		CurrentAnnotationMode := "Off"
 	}
 
@@ -252,39 +261,43 @@ SwitchAnnotationDrawingMode(modeToToggle)
 			{
 				; The mouse has moved by some distance, so we can start drawing the segments. We use Gdip_DrawLines() to connect three points togeter by drawing 
 				; two consecutive segments (one segment has actually already been drawn before). In that way, it can avoid gaps between each segment.
-				Gdip_DrawLines(LineAnnotationWindowGraphics
-					, LineAnnotationPen
+				Gdip_DrawLines(AnnotationTemporaryShapeWindowGraphics
+					, LineAnnotationPenForTemporaryShape
 				, SecondPreviousLineAnnotationMousePositionX "," SecondPreviousLineAnnotationMousePositionY "|" PreviousLineAnnotationMousePositionX "," PreviousLineAnnotationMousePositionY "|" LineAnnotationMousePositionX "," LineAnnotationMousePositionY) 
-				if (!HasDrawnLineAnnotationFirstSegment)
-				{
-					; Draw the first segment of the line again so that its alpha is the same as the other segments
-					Gdip_DrawLines(LineAnnotationWindowGraphics
-						, LineAnnotationPen
-					, SecondPreviousLineAnnotationMousePositionX "," SecondPreviousLineAnnotationMousePositionY "|" PreviousLineAnnotationMousePositionX "," PreviousLineAnnotationMousePositionY)
-					HasDrawnLineAnnotationFirstSegment := True
-				}
-				UpdateLayeredWindow(LineAnnotationWindowHwnd, LineAnnotationWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
+				Gui, AnnotationTemporaryShapeWindow: Show
+				UpdateLayeredWindow(AnnotationTemporaryShapeWindowHwnd, AnnotationTemporaryShapeWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
 			}
 
 			if (LineAnnotationMousePositionX != PreviousLineAnnotationMousePositionX || LineAnnotationMousePositionY != PreviousLineAnnotationMousePositionY)
 			{
-				; The cursor position is different from its previous position
+				; If the cursor position is different from its previous position, we should update the previous points.
 				SecondPreviousLineAnnotationMousePositionX := PreviousLineAnnotationMousePositionX
 				SecondPreviousLineAnnotationMousePositionY := PreviousLineAnnotationMousePositionY
 				PreviousLineAnnotationMousePositionX := LineAnnotationMousePositionX
-				PreviousLineAnnotationMousePositionY := LineAnnotationMousePositionY 
+				PreviousLineAnnotationMousePositionY := LineAnnotationMousePositionY
+				if (AllPointsInCursorTrace == "")
+				{
+					AllPointsInCursorTrace := LineAnnotationMousePositionX "," LineAnnotationMousePositionY
+				}
+				else
+				{
+					AllPointsInCursorTrace := AllPointsInCursorTrace "|" LineAnnotationMousePositionX "," LineAnnotationMousePositionY
+				}				
 			}
 		}
 		else
 		{ 
 			; The left button has been released
-			if (PreviousLineAnnotationMousePositionX != "" && SecondPreviousLineAnnotationMousePositionX != "")
+			if (AllPointsInCursorTrace != "")
 			{
-				; Draw the last segment again so that its alpha is the same as the other segments
-				Gdip_DrawLines(LineAnnotationWindowGraphics
+				; If the left button has been released, we can clear the drawing on the AnnotationTemporaryShapeWindow and draw the final shape to the AnnotationCanvasWindow
+				Gdip_DrawLines(AnnotationCanvasWindowGraphics
 					, LineAnnotationPen
-				, SecondPreviousLineAnnotationMousePositionX "," SecondPreviousLineAnnotationMousePositionY "|" PreviousLineAnnotationMousePositionX "," PreviousLineAnnotationMousePositionY) 
-				UpdateLayeredWindow(LineAnnotationWindowHwnd, LineAnnotationWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
+				, AllPointsInCursorTrace) 
+				UpdateLayeredWindow(AnnotationCanvasWindowHwnd, AnnotationCanvasWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
+				Sleep, 100		
+				Gdip_GraphicsClear(AnnotationTemporaryShapeWindowGraphics, 0)
+				UpdateLayeredWindow(AnnotationTemporaryShapeWindowHwnd, AnnotationTemporaryShapeWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
 			}
 			ResetVariablesForLineDrawing()
 		}
@@ -308,29 +321,30 @@ SwitchAnnotationDrawingMode(modeToToggle)
 				RectangleAnnotationWidth := Abs(RectangleAnnotationMousePositionX - RectangleAnnotationStartPointX)
 				RectangleAnnotationHeight := Abs(RectangleAnnotationMousePositionY - RectangleAnnotationStartPointY)
 
-				Gdip_GraphicsClear(RectangleAnnotationWindowGraphics, 0)
-				Gdip_DrawRectangle(RectangleAnnotationWindowGraphics
+				Gdip_GraphicsClear(AnnotationTemporaryShapeWindowGraphics, 0)
+				Gdip_DrawRectangle(AnnotationTemporaryShapeWindowGraphics
 					,RectangleAnnotationPen
 					,RectangleAnnotationTopLeftPointX
 					,RectangleAnnotationTopLeftPointY
 					,RectangleAnnotationWidth
 				,RectangleAnnotationHeight)
-				Gui, RectangleAnnotationWindow: Show
-				UpdateLayeredWindow(RectangleAnnotationWindowHwnd, RectangleAnnotationWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
+				Gui, AnnotationTemporaryShapeWindow: Show
+				UpdateLayeredWindow(AnnotationTemporaryShapeWindowHwnd, AnnotationTemporaryShapeWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
 			}
 		}
 		else if (RectangleAnnotationStartPointX != "")
 		{ 
-			; If the left button has been released, we can clear the drawing on the RectangleAnnotationWindow and draw the final Rectangle to the LineAnnotationWindow
-			Gdip_GraphicsClear(RectangleAnnotationWindowGraphics, 0)
-			UpdateLayeredWindow(RectangleAnnotationWindowHwnd, RectangleAnnotationWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
-			Gdip_DrawRectangle(LineAnnotationWindowGraphics
+			; If the left button has been released, we can clear the drawing on the AnnotationTemporaryShapeWindow and draw the final Rectangle to the AnnotationCanvasWindow			
+			Gdip_DrawRectangle(AnnotationCanvasWindowGraphics
 				,RectangleAnnotationPen
 				,RectangleAnnotationTopLeftPointX
 				,RectangleAnnotationTopLeftPointY
 				,RectangleAnnotationWidth
-			,RectangleAnnotationHeight)
-			UpdateLayeredWindow(LineAnnotationWindowHwnd, LineAnnotationWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
+			,RectangleAnnotationHeight)			
+			UpdateLayeredWindow(AnnotationCanvasWindowHwnd, AnnotationCanvasWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
+			Sleep, 100
+			Gdip_GraphicsClear(AnnotationTemporaryShapeWindowGraphics, 0)
+			UpdateLayeredWindow(AnnotationTemporaryShapeWindowHwnd, AnnotationTemporaryShapeWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
 			ResetVariablesForRectangleDrawing()
 		}
 	Return
