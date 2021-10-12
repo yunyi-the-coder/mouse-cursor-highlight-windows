@@ -294,8 +294,7 @@ SwitchAnnotationDrawingMode(modeToToggle)
 				Gdip_DrawLines(AnnotationCanvasWindowGraphics
 					, LineAnnotationPen
 				, AllPointsInCursorTrace) 
-				UpdateLayeredWindow(AnnotationCanvasWindowHwnd, AnnotationCanvasWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
-				Sleep, 100		
+				UpdateLayeredWindow(AnnotationCanvasWindowHwnd, AnnotationCanvasWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 				
 				Gdip_GraphicsClear(AnnotationTemporaryShapeWindowGraphics, 0)
 				UpdateLayeredWindow(AnnotationTemporaryShapeWindowHwnd, AnnotationTemporaryShapeWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
 			}
@@ -341,8 +340,7 @@ SwitchAnnotationDrawingMode(modeToToggle)
 				,RectangleAnnotationTopLeftPointY
 				,RectangleAnnotationWidth
 			,RectangleAnnotationHeight)			
-			UpdateLayeredWindow(AnnotationCanvasWindowHwnd, AnnotationCanvasWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
-			Sleep, 100
+			UpdateLayeredWindow(AnnotationCanvasWindowHwnd, AnnotationCanvasWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 			
 			Gdip_GraphicsClear(AnnotationTemporaryShapeWindowGraphics, 0)
 			UpdateLayeredWindow(AnnotationTemporaryShapeWindowHwnd, AnnotationTemporaryShapeWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
 			ResetVariablesForRectangleDrawing()
