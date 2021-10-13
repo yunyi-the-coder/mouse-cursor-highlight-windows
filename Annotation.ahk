@@ -74,7 +74,7 @@ CreateAnnotationCanvasWindow()
 
 	; Hide cursor spotlight window and key stroke osd window before taking the screenshot
 	Gui, CursorSpotlightWindow: Hide
-	Gui, KeyStrokeOSDWindow: Hide	
+	Gui, KeyStrokeOSDWindow: Hide
 
 	; Copy screen pixels to a buffer        
 	local hdc_screen := GetDC()
@@ -168,7 +168,8 @@ ResetVariablesForLineDrawing()
 	SecondPreviousLineAnnotationMousePositionY := ""
 	PreviousLineAnnotationMousePositionX := ""
 	PreviousLineAnnotationMousePositionY := ""
-	AllPointsInCursorTrace := ""
+	HasFirstLineAnnotationSegmentBeenDrawn := False
+	AllPointsInLineAnnotation := ""
 }
 
 ResetVariablesForRectangleDrawing()
@@ -266,6 +267,17 @@ SwitchAnnotationDrawingMode(modeToToggle)
 				, SecondPreviousLineAnnotationMousePositionX "," SecondPreviousLineAnnotationMousePositionY "|" PreviousLineAnnotationMousePositionX "," PreviousLineAnnotationMousePositionY "|" LineAnnotationMousePositionX "," LineAnnotationMousePositionY) 
 				Gui, AnnotationTemporaryShapeWindow: Show
 				UpdateLayeredWindow(AnnotationTemporaryShapeWindowHwnd, AnnotationTemporaryShapeWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
+
+				if(HasFirstLineAnnotationSegmentBeenDrawn == False)
+				{
+					; Draw the first segment twice so that it has the same alpha as the other segments
+					Gdip_DrawLines(AnnotationTemporaryShapeWindowGraphics
+						, LineAnnotationPenForTemporaryShape
+					, SecondPreviousLineAnnotationMousePositionX "," SecondPreviousLineAnnotationMousePositionY "|" PreviousLineAnnotationMousePositionX "," PreviousLineAnnotationMousePositionY) 
+					Gui, AnnotationTemporaryShapeWindow: Show
+					UpdateLayeredWindow(AnnotationTemporaryShapeWindowHwnd, AnnotationTemporaryShapeWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
+					HasFirstLineAnnotationSegmentBeenDrawn := True
+				}
 			}
 
 			if (LineAnnotationMousePositionX != PreviousLineAnnotationMousePositionX || LineAnnotationMousePositionY != PreviousLineAnnotationMousePositionY)
@@ -275,25 +287,25 @@ SwitchAnnotationDrawingMode(modeToToggle)
 				SecondPreviousLineAnnotationMousePositionY := PreviousLineAnnotationMousePositionY
 				PreviousLineAnnotationMousePositionX := LineAnnotationMousePositionX
 				PreviousLineAnnotationMousePositionY := LineAnnotationMousePositionY
-				if (AllPointsInCursorTrace == "")
+				if (AllPointsInLineAnnotation == "")
 				{
-					AllPointsInCursorTrace := LineAnnotationMousePositionX "," LineAnnotationMousePositionY
+					AllPointsInLineAnnotation := LineAnnotationMousePositionX "," LineAnnotationMousePositionY
 				}
 				else
 				{
-					AllPointsInCursorTrace := AllPointsInCursorTrace "|" LineAnnotationMousePositionX "," LineAnnotationMousePositionY
+					AllPointsInLineAnnotation := AllPointsInLineAnnotation "|" LineAnnotationMousePositionX "," LineAnnotationMousePositionY
 				}				
 			}
 		}
 		else
 		{ 
 			; The left button has been released
-			if (AllPointsInCursorTrace != "")
+			if (AllPointsInLineAnnotation != "")
 			{
 				; If the left button has been released, we can clear the drawing on the AnnotationTemporaryShapeWindow and draw the final shape to the AnnotationCanvasWindow
 				Gdip_DrawLines(AnnotationCanvasWindowGraphics
 					, LineAnnotationPen
-				, AllPointsInCursorTrace) 
+				, AllPointsInLineAnnotation) 
 				UpdateLayeredWindow(AnnotationCanvasWindowHwnd, AnnotationCanvasWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 				
 				Gdip_GraphicsClear(AnnotationTemporaryShapeWindowGraphics, 0)
 				UpdateLayeredWindow(AnnotationTemporaryShapeWindowHwnd, AnnotationTemporaryShapeWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
