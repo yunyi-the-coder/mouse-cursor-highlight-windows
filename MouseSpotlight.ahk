@@ -15,20 +15,20 @@ ClickEvents := []
 SetupMouseSpotlight()
 {
     global
-    Config := ReadConfigFile("config.ini") 
-    InitializeSpotlightGUI(Config)
+    SETTINGS := ReadConfigFile("settings.ini")
+    InitializeSpotlightGUI()
 }
 
-InitializeSpotlightGUI(Config){ 
-    global CursorSpotlightHwnd
-    if Config.cursorSpotlight.enabled = "True"
+InitializeSpotlightGUI(){ 
+    global CursorSpotlightHwnd, SETTINGS
+    if (SETTINGS.cursorSpotlight.enabled == True)
     { 
-        global CursorSpotlightDiameter := Config.cursorSpotlight.spotlightDiameter
-        spotlightRingWidth := Config.cursorSpotlight.spotlightRingWidth
+        global CursorSpotlightDiameter := SETTINGS.cursorSpotlight.spotlightDiameter
+        spotlightRingWidth := SETTINGS.cursorSpotlight.spotlightRingWidth
         Gui, CursorSpotlightWindow: +HwndCursorSpotlightHwnd +AlwaysOnTop -Caption +ToolWindow +E0x20 ;+E0x20 click thru
-        Gui, CursorSpotlightWindow: Color, % Config.cursorSpotlight.spotlightColor
+        Gui, CursorSpotlightWindow: Color, % SETTINGS.cursorSpotlight.spotlightColor
         Gui, CursorSpotlightWindow: Show, x0 y0 w%CursorSpotlightDiameter% h%CursorSpotlightDiameter% NA
-        WinSet, Transparent, % Config.CursorSpotlight.spotlightOpacity, ahk_id %CursorSpotlightHwnd%
+        WinSet, Transparent, % SETTINGS.CursorSpotlight.spotlightOpacity, ahk_id %CursorSpotlightHwnd%
         ; Create a ring region to highlight the cursor
         finalRegion := DllCall("CreateEllipticRgn", "Int", 0, "Int", 0, "Int", CursorSpotlightDiameter, "Int", CursorSpotlightDiameter)
         if (spotlightRingWidth < CursorSpotlightDiameter/2)
@@ -41,12 +41,21 @@ InitializeSpotlightGUI(Config){
         SetTimer, DrawSpotlight, 10
         Return
 
-        DrawSpotlight:
-            MouseGetPos, X, Y
-            X -= CursorSpotlightDiameter / 2 - 3
-            Y -= CursorSpotlightDiameter / 2 - 2
-            WinMove, ahk_id %CursorSpotlightHwnd%, , %X%, %Y%
-            WinSet, AlwaysOnTop, On, ahk_id %CursorSpotlightHwnd%
+        DrawSpotlight:            
+            ; SETTINGS.cursorSpotlight.enabled can be changed by other script such as Annotation.ahk
+            if (SETTINGS.cursorSpotlight.enabled == True)
+            {
+                MouseGetPos, X, Y
+                X -= CursorSpotlightDiameter / 2 - 3
+                Y -= CursorSpotlightDiameter / 2 - 2
+                WinMove, ahk_id %CursorSpotlightHwnd%, , %X%, %Y%
+                WinSet, AlwaysOnTop, On, ahk_id %CursorSpotlightHwnd%
+            }
+            else
+            {
+                 WinMove, ahk_id %CursorSpotlightHwnd%, , -999999999, -999999999
+            }
+
         Return
     }
 }

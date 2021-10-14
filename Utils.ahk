@@ -1,13 +1,28 @@
 ReadConfigFile(configFileName)
 {
-    result := {}
-    IniRead, allSections, %configFileName%
-    allSections := StrSplit(allSections, "`n", "`r")
-    for index, oneSection in allSections {
-        IniRead, items, %configFileName%, %oneSection%
-        result[oneSection] := Object(StrSplit(items, ["`n","="], "`r")*)
-    }
-    Return result
+	result := {}
+	IniRead, allSections, %configFileName%
+	allSections := StrSplit(allSections, "`n", "`r")
+	for index, oneSection in allSections {
+		IniRead, textInOneSection, %configFileName%, %oneSection%
+		items := StrSplit(textInOneSection, ["`n","="], "`r")
+		for index2, oneItem in items
+		{
+			if(Mod(index2, 2) == 0 )
+			{
+				if (oneItem = "True")
+				{
+					items[index2] := True
+				}
+				else if (oneItem = "False")
+				{
+					items[index2] := False
+				}
+			}
+		}
+		result[oneSection] := Object(items*)
+	}
+	Return result
 }
 
 Max(num*){

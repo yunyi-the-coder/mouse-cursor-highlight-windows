@@ -73,8 +73,14 @@ CreateAnnotationCanvasWindow()
 	Gdip_SetSmoothingMode(AnnotationCanvasWindowGraphics, 4)
 
 	; Hide cursor spotlight window and key stroke osd window before taking the screenshot
-	Gui, CursorSpotlightWindow: Hide
-	Gui, KeyStrokeOSDWindow: Hide
+	CursorSpotlightEnabledOldValue := SETTINGS.cursorSpotlight.enabled	
+	SETTINGS.cursorSpotlight.enabled := False
+	KeyStrokeOSDEnabledOldValue := SETTINGS.keyStrokeOSD.enabled
+	if(SETTINGS.keyStrokeOSD.enabled == True)
+	{		
+		SETTINGS.keyStrokeOSD.enabled := False
+		Gui, KeyStrokeOSDWindow:Hide
+	}
 
 	; Copy screen pixels to a buffer        
 	local hdc_screen := GetDC()
@@ -84,9 +90,9 @@ CreateAnnotationCanvasWindow()
 	BitBlt(hdc_buffer, 0, 0, WidthAcrossAllMonitors, HeightAcrossAllMonitors, hdc_screen, MinXOfAllMonitors, MinYOfAllMonitors, 0x00CC0020)
 
 	; Show cursor spotlight window after taking the screenshot
-	if (Config.cursorSpotlight.enabled == "True" && Config.annotation.annotationShowSpotlightWhenDrawing == "True")
+	if (CursorSpotlightEnabledOldValue == True && SETTINGS.annotation.annotationShowSpotlightWhenDrawing == True)
 	{
-		Gui, CursorSpotlightWindow: Show
+		SETTINGS.cursorSpotlight.enabled := True
 	}
 
 	; Copy pixels from the buffer to the line annotation window.
@@ -94,12 +100,12 @@ CreateAnnotationCanvasWindow()
 	UpdateLayeredWindow(AnnotationCanvasWindowHwnd, AnnotationCanvasWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
 
 	; Create the pen to draw line annotations
-	local annotationAlphaRGB := Config.annotation.annotationLineAlpha << 24 | Config.annotation.annotationLineColor
-	LineAnnotationPen := Gdip_CreatePen(annotationAlphaRGB, Config.annotation.annotationLineWidth) 
+	local annotationAlphaRGB := SETTINGS.annotation.annotationLineAlpha << 24 | SETTINGS.annotation.annotationLineColor
+	LineAnnotationPen := Gdip_CreatePen(annotationAlphaRGB, SETTINGS.annotation.annotationLineWidth) 
 
 	; Create the pen to draw rectangle annotations
-	local annotationAlphaRGB := Config.annotation.annotationRectangleBorderAlpha << 24 | Config.annotation.annotationRectangleBorderColor
-	RectangleAnnotationPen := Gdip_CreatePen(annotationAlphaRGB, Config.annotation.annotationRectangleBorderWidth) 
+	local annotationAlphaRGB := SETTINGS.annotation.annotationRectangleBorderAlpha << 24 | SETTINGS.annotation.annotationRectangleBorderColor
+	RectangleAnnotationPen := Gdip_CreatePen(annotationAlphaRGB, SETTINGS.annotation.annotationRectangleBorderWidth) 
 }
 
 CreateAnnotationTemporaryShapeWindow()
@@ -133,8 +139,8 @@ CreateAnnotationTemporaryShapeWindow()
 	Gdip_SetSmoothingMode(AnnotationTemporaryShapeWindowGraphics, 4)
 
 	; Create the pen to draw line annotations with half of the alpha on the AnnotationTemporaryShapeWindow
-	local annotationAlphaRGB := Round(Config.annotation.annotationLineAlpha/2) << 24 | Config.annotation.annotationLineColor
-	LineAnnotationPenForTemporaryShape := Gdip_CreatePen(annotationAlphaRGB, Config.annotation.annotationLineWidth) 
+	local annotationAlphaRGB := Round(SETTINGS.annotation.annotationLineAlpha/2) << 24 | SETTINGS.annotation.annotationLineColor
+	LineAnnotationPenForTemporaryShape := Gdip_CreatePen(annotationAlphaRGB, SETTINGS.annotation.annotationLineWidth) 
 
 	Return
 }
@@ -236,11 +242,9 @@ SwitchAnnotationDrawingMode(modeToToggle)
 
 	if (modeToToggle == "Off")
 	{
-		; Show cursor spotlight window after we finish drawing
-		if (Config.cursorSpotlight.enabled == "True")
-		{
-			Gui, CursorSpotlightWindow: Show
-		}
+		; Show cursor spotlight window and keyStrokeOSD window
+		SETTINGS.cursorSpotlight.enabled := CursorSpotlightEnabledOldValue
+		SETTINGS.keyStrokeOSD.enabled := KeyStrokeOSDEnabledOldValue
 		SetTimer, DRAW_RECTANGLE_ANNOTATION, Off
 		SetTimer, DRAW_LINE_ANNOTATION, Off
 		DestroyAnnotationTemporaryShapeWindow()
@@ -362,14 +366,14 @@ SwitchAnnotationDrawingMode(modeToToggle)
 
 SetupLineAnnotationDrawing()
 {
-	global Config := ReadConfigFile("config.ini")
-	if (Config.annotation.enabled == "True"){
+	global SETTINGS := ReadConfigFile("settings.ini")
+	if (SETTINGS.annotation.enabled == True){
 		SwitchAnnotationDrawingModeToLineDrawing := Func("SwitchAnnotationDrawingMode").Bind("LineAnnotation")
 		SwitchAnnotationDrawingModeToRectangleDrawing := Func("SwitchAnnotationDrawingMode").Bind("RectangleAnnotation")
 		SwitchAnnotationDrawingModeToOff := Func("SwitchAnnotationDrawingMode").Bind("Off")
-		Hotkey, % Config.annotation.annotationLineDrawingToggleHotkey, %SwitchAnnotationDrawingModeToLineDrawing%
-		Hotkey, % Config.annotation.annotationRectangleDrawingToggleHotkey, %SwitchAnnotationDrawingModeToRectangleDrawing%
-		Hotkey, % Config.annotation.annotationClearDrawingHotkey, %SwitchAnnotationDrawingModeToOff%		
+		Hotkey, % SETTINGS.annotation.annotationLineDrawingToggleHotkey, %SwitchAnnotationDrawingModeToLineDrawing%
+		Hotkey, % SETTINGS.annotation.annotationRectangleDrawingToggleHotkey, %SwitchAnnotationDrawingModeToRectangleDrawing%
+		Hotkey, % SETTINGS.annotation.annotationClearDrawingHotkey, %SwitchAnnotationDrawingModeToOff%		
 	}
 }
 

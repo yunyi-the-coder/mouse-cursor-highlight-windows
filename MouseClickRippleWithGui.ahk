@@ -15,48 +15,48 @@ IsStillDrawingRipples := False
 SetupMouseClickRipple()
 {
     global
-    Config := ReadConfigFile("config.ini") 
-    InitializeClickRippleGUI(Config) 
+    SETTINGS := ReadConfigFile("settings.ini") 
+    InitializeClickRippleGUI() 
 
     local ProcessMouseClickFunc := Func("ProcessMouseClick").Bind() 
-    if (Config.cursorLeftClickRippleEffect.enabled = "True") { 
+    if (SETTINGS.cursorLeftClickRippleEffect.enabled = True) { 
         Hotkey, ~*LButton, %ProcessMouseClickFunc% 
     }
-    if (Config.cursorRightClickRippleEffect.enabled = "True") {
+    if (SETTINGS.cursorRightClickRippleEffect.enabled = True) {
         Hotkey, ~*RButton, %ProcessMouseClickFunc% 
     }
-    if (Config.cursorMiddleClickRippleEffect.enabled = "True") {
+    if (SETTINGS.cursorMiddleClickRippleEffect.enabled = True) {
         Hotkey, ~*MButton, %ProcessMouseClickFunc% 
     }
 }
 
-InitializeClickRippleGUI(Config){ 
+InitializeClickRippleGUI(){ 
     global	
     Gui, MouseClickRippleWindow: +hwndClickRippleWindowHwnd +AlwaysOnTop -Caption +ToolWindow +E0x20 ;+E0x20 click thru    
     WinSet, Transparent, % transparency, % "ahk_id " ClickRippleWindowHwnd 
-    ClickRippleWindowWidth := Max(Config.cursorLeftClickRippleEffect.rippleDiameterStart
-        , Config.cursorLeftClickRippleEffect.rippleDiameterEnd
-        , Config.cursorMiddleClickRippleEffect.rippleDiameterStart
-        , Config.cursorMiddleClickRippleEffect.rippleDiameterEnd
-        , Config.cursorRightClickRippleEffect.rippleDiameterStart
-    , Config.cursorRightClickRippleEffect.rippleDiameterEnd ) + 2
+    ClickRippleWindowWidth := Max(SETTINGS.cursorLeftClickRippleEffect.rippleDiameterStart
+        , SETTINGS.cursorLeftClickRippleEffect.rippleDiameterEnd
+        , SETTINGS.cursorMiddleClickRippleEffect.rippleDiameterStart
+        , SETTINGS.cursorMiddleClickRippleEffect.rippleDiameterEnd
+        , SETTINGS.cursorRightClickRippleEffect.rippleDiameterStart
+    , SETTINGS.cursorRightClickRippleEffect.rippleDiameterEnd ) + 2
 
     Return
 }
 
 ProcessMouseClick() {
-    global Config, ClickEvents
-    if A_ThisHotkey contains LButton 
+    global SETTINGS, ClickEvents
+    if (InStr(A_ThisHotkey, "LButton"))
     {
-        params := Config.cursorLeftClickRippleEffect 
+        params := SETTINGS.cursorLeftClickRippleEffect 
     }
-    if A_ThisHotkey contains MButton 
+    if (InStr(A_ThisHotkey, "MButton"))
     {
-        params := Config.cursorMiddleClickRippleEffect 
+        params := SETTINGS.cursorMiddleClickRippleEffect 
     }
-    if A_ThisHotkey contains RButton 
+    if (InStr(A_ThisHotkey, "RButton"))
     { 
-        params := Config.cursorRightClickRippleEffect 
+        params := SETTINGS.cursorRightClickRippleEffect 
     }
     ; Add an event to the event array and call the DrawRipple function.
 
@@ -71,7 +71,7 @@ ProcessMouseClick() {
 CheckToDrawNextClickEvent()
 { 
     global
-    if IsStillDrawingRipples or ClickEvents.Count() == 0
+    if (IsStillDrawingRipples || ClickEvents.Count() == 0)
     {
         Return
     }
@@ -80,7 +80,7 @@ CheckToDrawNextClickEvent()
     RippleEventParams := ClickEvents[1]
     ClickEvents.RemoveAt(1)
 
-    if RippleEventParams.playClickSound == "True"
+    if (RippleEventParams.playClickSound == True)
     {
         SoundPlay, %A_ScriptDir%\MouseClickSound.wav
     }
@@ -100,7 +100,7 @@ CheckToDrawNextClickEvent()
 
     DRAW_RIPPLE:
         local regionKey := RippleEventParams.rippleColor "," CurrentRippleDiameter
-        if AlreadyCreatedRegionForRipples.HasKey(regionKey)
+        if (AlreadyCreatedRegionForRipples.HasKey(regionKey))
         {
             local finalRegion := AlreadyCreatedRegionForRipples[regionKey]
         }

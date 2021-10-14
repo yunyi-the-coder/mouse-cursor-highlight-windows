@@ -14,29 +14,30 @@ ModifierKeyList := ["Shift", "Alt", "Ctrl", "LWin", "RWin"]
 SetupKeyStrokeOSD()
 {
     global
-    Config := ReadConfigFile("config.ini") 
-    if Config.keyStrokeOSD.enabled = "True"
+    SETTINGS := ReadConfigFile("settings.ini") 
+    if (SETTINGS.keyStrokeOSD.enabled == True)
     {
-        InitializeKeyStrokeOSDGUI(Config)
-        AddHotkeysForKeyStrokeOSD(Config)
+        InitializeKeyStrokeOSDGUI()
+        AddHotkeysForKeyStrokeOSD()
     }
 }
 
-InitializeKeyStrokeOSDGUI(Config){
+InitializeKeyStrokeOSDGUI(){
     global 
     Gui, KeyStrokeOSDWindow: +LastFound +AlwaysOnTop -Caption +ToolWindow +E0x20 +hwndTheKeyStrokeOSDHwnd ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
-    Gui, KeyStrokeOSDWindow: Color, % Config.keyStrokeOSD.osdWindowBackgroundColor
-    Gui, KeyStrokeOSDWindow: Font, % "s" Config.keyStrokeOSD.osdFontSize
-    Gui, KeyStrokeOSDWindow: Add, Text, % "x0 y0 center vKeyStrokeOSDTextControl c" Config.keyStrokeOSD.osdFontColor " w" Config.keyStrokeOSD.osdWindowWidth " h" Config.keyStrokeOSD.osdWindowHeight
-    WinSet, Transparent, % Config.keyStrokeOSD.osdWindowOpacity 
-    Gui, KeyStrokeOSDWindow: Show, % "x " Config.keyStrokeOSD.osdWindowPositionX " y" Config.keyStrokeOSD.osdWindowPositionY " w" Config.keyStrokeOSD.osdWindowWidth " h" Config.keyStrokeOSD.osdWindowHeight " NoActivate" ;NoActivate avoids deactivating the currently active window.
+    Gui, KeyStrokeOSDWindow: Color, % SETTINGS.keyStrokeOSD.osdWindowBackgroundColor
+    Gui, KeyStrokeOSDWindow: Font, % "s" SETTINGS.keyStrokeOSD.osdFontSize
+    Gui, KeyStrokeOSDWindow: Add, Text, % "x0 y0 center vKeyStrokeOSDTextControl c" SETTINGS.keyStrokeOSD.osdFontColor " w" SETTINGS.keyStrokeOSD.osdWindowWidth " h" SETTINGS.keyStrokeOSD.osdWindowHeight
+    WinSet, Transparent, % SETTINGS.keyStrokeOSD.osdWindowOpacity 
+    Gui, KeyStrokeOSDWindow: Show, % "x " SETTINGS.keyStrokeOSD.osdWindowPositionX " y" SETTINGS.keyStrokeOSD.osdWindowPositionY " w" SETTINGS.keyStrokeOSD.osdWindowWidth " h" SETTINGS.keyStrokeOSD.osdWindowHeight " NoActivate" ;NoActivate avoids deactivating the currently active window.
     WinHide, ahk_id %TheKeyStrokeOSDHwnd% 
     Return
 }
 
-AddHotkeysForKeyStrokeOSD(Config)
+AddHotkeysForKeyStrokeOSD()
 {
-    local ProcessKeyStrokeFunc := Func("ProcessKeyStroke").Bind(Config) 
+    global SETTINGS
+    ProcessKeyStrokeFunc := Func("ProcessKeyStroke")
     SetFormat, Integer, hex
     start:= 0 
     Loop, 227
@@ -58,8 +59,14 @@ AddHotkeysForKeyStrokeOSD(Config)
     Hotkey, ~*Delete, %ProcessKeyStrokeFunc%
 }
 
-ProcessKeyStroke(Config)
+ProcessKeyStroke()
 { 
+    global SETTINGS
+    ; SETTINGS.keyStrokeOSD.enabled can be changed by other script such as the Annotation.ahk. So we need to check it before displaying an OSD.
+     if (SETTINGS.keyStrokeOSD.enabled != True)
+     {
+         Return
+     }
     static PressedModifierKeys
     if (!isobject(PressedModifierKeys)) 
     {
@@ -78,7 +85,7 @@ ProcessKeyStroke(Config)
         theKeyPressed := "Alt" 
     }
 
-    if StrLen(theKeyPressed) = 1
+    if (StrLen(theKeyPressed) == 1)
     {
         StringUpper theKeyPressed, theKeyPressed
     }
@@ -89,7 +96,7 @@ ProcessKeyStroke(Config)
     textForPressedModifierKeys := ""
     for index, key in PressedModifierKeys
     {
-        if index = 1
+        if (index == 1)
         {
             textForPressedModifierKeys := key
         }
@@ -102,10 +109,10 @@ ProcessKeyStroke(Config)
     static PreviouseDisplayedText, PreviouseHotkeyText, LastTickCount
     valueToUpdatePreviouseHotkeyText := PreviouseHotkeyText
     shouldCheckKeyChord := True
-    if PressedModifierKeys.Length() > 0 
+    if (PressedModifierKeys.Length() > 0)
     {
         ; At least one modifier key is pressed
-        if HasVal(PressedModifierKeys, theKeyPressed)
+        if (HasVal(PressedModifierKeys, theKeyPressed))
         {
             ; Only the modifier keys pressed
             PreviouseDisplayedTextBeginningStr := SubStr(PreviouseDisplayedText, 1 , StrLen(textForPressedModifierKeys))
@@ -138,10 +145,10 @@ ProcessKeyStroke(Config)
 
     ; shouldDisplay := False
     ; Check if it's a key chord, eg: Ctrl+K M            
-    if shouldCheckKeyChord and Config.keyStrokeOSD.osdKeyChordsRegex
+    if (shouldCheckKeyChord && SETTINGS.keyStrokeOSD.osdKeyChordsRegex)
     {        
         possibleKeyChord := PreviouseHotkeyText " " textToDisplay
-        if RegExMatch(possibleKeyChord, Config.keyStrokeOSD.osdKeyChordsRegex)
+        if RegExMatch(possibleKeyChord, SETTINGS.keyStrokeOSD.osdKeyChordsRegex)
         {
             shouldDisplay := True
             textToDisplay := possibleKeyChord
@@ -151,9 +158,9 @@ ProcessKeyStroke(Config)
 
     if (!shouldDisplay){
         ; Check if it's a hotkey
-        if Config.keyStrokeOSD.osdHotKeyRegex
+        if (SETTINGS.keyStrokeOSD.osdHotKeyRegex)
         {
-            if RegExMatch(textToDisplay, Config.keyStrokeOSD.osdHotKeyRegex)
+            if (RegExMatch(textToDisplay, SETTINGS.keyStrokeOSD.osdHotKeyRegex))
             {
                 shouldDisplay := True
             }
@@ -163,15 +170,15 @@ ProcessKeyStroke(Config)
             shouldDisplay := True
         }
     }
-
-    if shouldDisplay
+    
+    if (shouldDisplay)
     { 
         global TheKeyStrokeOSDHwnd 
         SetTimer, HideOSDWindow, Off 
         WinShow, ahk_id %TheKeyStrokeOSDHwnd%        
         GuiControl, KeyStrokeOSDWindow:, KeyStrokeOSDTextControl, % textToDisplay
         PreviouseDisplayedText := textToDisplay
-        SetTimer, HideOSDWindow, % Config.keyStrokeOSD.osdDuration 
+        SetTimer, HideOSDWindow, % SETTINGS.keyStrokeOSD.osdDuration 
     }
 
     Return
@@ -191,7 +198,7 @@ CheckAndUpdatePressedModifierKeys(PressedModifierKeys)
     index := PressedModifierKeys.Count()
     while index > 0
     {
-        if !GetKeyState(PressedModifierKeys[index], "P")
+        if (!GetKeyState(PressedModifierKeys[index], "P"))
         {
             PressedModifierKeys.RemoveAt(index)
         }
@@ -201,7 +208,7 @@ CheckAndUpdatePressedModifierKeys(PressedModifierKeys)
     global ModifierKeyList
     for index, key in ModifierKeyList
     {
-        if GetKeyState(key, "P") and !HasVal(PressedModifierKeys, key)
+        if (GetKeyState(key, "P") and !HasVal(PressedModifierKeys, key))
         {
             PressedModifierKeys.Push(key) 
         }
