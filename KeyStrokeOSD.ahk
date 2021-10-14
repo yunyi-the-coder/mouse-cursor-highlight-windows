@@ -143,7 +143,6 @@ ProcessKeyStroke()
 
     LastTickCount := A_TickCount
 
-    ; shouldDisplay := False
     ; Check if it's a key chord, eg: Ctrl+K M            
     if (shouldCheckKeyChord && SETTINGS.keyStrokeOSD.osdKeyChordsRegex)
     {        
@@ -151,16 +150,16 @@ ProcessKeyStroke()
         if RegExMatch(possibleKeyChord, SETTINGS.keyStrokeOSD.osdKeyChordsRegex)
         {
             shouldDisplay := True
-            textToDisplay := possibleKeyChord
+            textToDisplay := possibleKeyChord            
         }
     }
     PreviouseHotkeyText := valueToUpdatePreviouseHotkeyText
 
     if (!shouldDisplay){
-        ; Check if it's a hotkey
-        if (SETTINGS.keyStrokeOSD.osdHotKeyRegex)
+        ; If it's not a key chord, check if it's a single hotkey key
+        if (SETTINGS.keyStrokeOSD.osdHotkeyRegex)
         {
-            if (RegExMatch(textToDisplay, SETTINGS.keyStrokeOSD.osdHotKeyRegex))
+            if (RegExMatch(textToDisplay, SETTINGS.keyStrokeOSD.osdHotkeyRegex))
             {
                 shouldDisplay := True
             }
