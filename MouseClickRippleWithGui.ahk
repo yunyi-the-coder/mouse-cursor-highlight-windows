@@ -121,8 +121,8 @@ CheckToDrawNextClickEvent()
         }
 
         DllCall("SetWindowRgn", "UInt", ClickRippleWindowHwnd, "UInt", finalRegion, "UInt", true)
-        WinSet,Transparent , %CurrentRippleAlpha%, % "ahk_id " ClickRippleWindowHwnd        
-        DeleteObject(finalRegion)
+        WinSet,Transparent , %CurrentRippleAlpha%, % "ahk_id " ClickRippleWindowHwnd
+        DeleteObject(finalRegion)        
         ; Clone the current region and save it for the next usage
         local clonedRegion := DllCall("CreateRectRgn", "int", 0, "int", 0, "int", 0, "int", 0)
         local RegionType := DllCall("GetWindowRgn", "uint", ClickRippleWindowHwnd, "uint", clonedRegion)

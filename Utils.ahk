@@ -4,8 +4,25 @@ ReadConfigFile(configFileName)
 	IniRead, allSections, %configFileName%
 	allSections := StrSplit(allSections, "`n", "`r")
 	for index, oneSection in allSections {
+		if (oneSection = "comment")
+		{
+			continue
+		}
 		IniRead, textInOneSection, %configFileName%, %oneSection%
-		items := StrSplit(textInOneSection, ["`n","="], "`r")
+		items := []
+		lines := StrSplit(textInOneSection, ["`n"], "`r")
+		for notInUse, oneLine in lines
+		{
+			if (SubStr(oneLine, 1, 1) == "#")
+			{
+				;Ignore comments in the ini file
+				continue
+			}
+			keyAndValue := StrSplit(oneLine, ["="], "`r")
+			items.Push(keyAndValue[1])
+			items.Push(keyAndValue[2])			 
+		}
+		
 		for index2, oneItem in items
 		{
 			if(Mod(index2, 2) == 0 )

@@ -73,9 +73,13 @@ CreateAnnotationCanvasWindow()
 	Gdip_SetSmoothingMode(AnnotationCanvasWindowGraphics, 4)
 
 	; Hide cursor spotlight window and key stroke osd window before taking the screenshot
-	CursorSpotlightEnabledOldValue := SETTINGS.cursorSpotlight.enabled	
-	SETTINGS.cursorSpotlight.enabled := False
+	CursorSpotlightEnabledOldValue := SETTINGS.cursorSpotlight.enabled		
 	KeyStrokeOSDEnabledOldValue := SETTINGS.keyStrokeOSD.enabled
+	if(SETTINGS.cursorSpotlight.enabled == True)
+	{		
+		SETTINGS.cursorSpotlight.enabled := False
+		Gui, CursorSpotlightWindow:Hide		
+	}
 	if(SETTINGS.keyStrokeOSD.enabled == True)
 	{		
 		SETTINGS.keyStrokeOSD.enabled := False
@@ -93,6 +97,7 @@ CreateAnnotationCanvasWindow()
 	if (CursorSpotlightEnabledOldValue == True && SETTINGS.annotation.annotationShowSpotlightWhenDrawing == True)
 	{
 		SETTINGS.cursorSpotlight.enabled := True
+		Gui, CursorSpotlightWindow:Show
 	}
 
 	; Copy pixels from the buffer to the line annotation window.
@@ -310,7 +315,8 @@ SwitchAnnotationDrawingMode(modeToToggle)
 				Gdip_DrawLines(AnnotationCanvasWindowGraphics
 					, LineAnnotationPen
 				, AllPointsInLineAnnotation) 
-				UpdateLayeredWindow(AnnotationCanvasWindowHwnd, AnnotationCanvasWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 				
+				UpdateLayeredWindow(AnnotationCanvasWindowHwnd, AnnotationCanvasWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors)
+				Sleep, 50
 				Gdip_GraphicsClear(AnnotationTemporaryShapeWindowGraphics, 0)
 				UpdateLayeredWindow(AnnotationTemporaryShapeWindowHwnd, AnnotationTemporaryShapeWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
 			}
@@ -343,7 +349,7 @@ SwitchAnnotationDrawingMode(modeToToggle)
 					,RectangleAnnotationTopLeftPointY
 					,RectangleAnnotationWidth
 				,RectangleAnnotationHeight)
-				Gui, AnnotationTemporaryShapeWindow: Show
+				Gui, AnnotationTemporaryShapeWindow: Show				
 				UpdateLayeredWindow(AnnotationTemporaryShapeWindowHwnd, AnnotationTemporaryShapeWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
 			}
 		}
@@ -357,6 +363,7 @@ SwitchAnnotationDrawingMode(modeToToggle)
 				,RectangleAnnotationWidth
 			,RectangleAnnotationHeight)			
 			UpdateLayeredWindow(AnnotationCanvasWindowHwnd, AnnotationCanvasWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 			
+			Sleep, 50
 			Gdip_GraphicsClear(AnnotationTemporaryShapeWindowGraphics, 0)
 			UpdateLayeredWindow(AnnotationTemporaryShapeWindowHwnd, AnnotationTemporaryShapeWindowHdc, MinXOfAllMonitors, MinYOfAllMonitors, WidthAcrossAllMonitors, HeightAcrossAllMonitors) 
 			ResetVariablesForRectangleDrawing()
