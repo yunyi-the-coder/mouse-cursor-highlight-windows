@@ -26,7 +26,7 @@ InitializeKeyStrokeOSDGUI(){
     global 
     Gui, KeyStrokeOSDWindow: +LastFound +AlwaysOnTop -Caption +ToolWindow +E0x20 +hwndTheKeyStrokeOSDHwnd ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
     Gui, KeyStrokeOSDWindow: Color, % SETTINGS.keyStrokeOSD.osdWindowBackgroundColor
-    Gui, KeyStrokeOSDWindow: Font, % "s" SETTINGS.keyStrokeOSD.osdFontSize
+    Gui, KeyStrokeOSDWindow: Font, % "s" SETTINGS.keyStrokeOSD.osdFontSize, % SETTINGS.keyStrokeOSD.osdFontFamily
     Gui, KeyStrokeOSDWindow: Add, Text, % "x0 y0 center vKeyStrokeOSDTextControl c" SETTINGS.keyStrokeOSD.osdFontColor " w" SETTINGS.keyStrokeOSD.osdWindowWidth " h" SETTINGS.keyStrokeOSD.osdWindowHeight
     WinSet, Transparent, % SETTINGS.keyStrokeOSD.osdWindowOpacity 
     Gui, KeyStrokeOSDWindow: Show, % "x " SETTINGS.keyStrokeOSD.osdWindowPositionX " y" SETTINGS.keyStrokeOSD.osdWindowPositionY " w" SETTINGS.keyStrokeOSD.osdWindowWidth " h" SETTINGS.keyStrokeOSD.osdWindowHeight " NoActivate" ;NoActivate avoids deactivating the currently active window.
