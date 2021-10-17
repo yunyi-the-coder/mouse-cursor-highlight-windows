@@ -139,7 +139,14 @@ CheckToDrawNextClickEvent()
         
         ; Calculate necessary values to prepare for drawing the next circle
         CurrentRippleAlpha := CurrentRippleAlpha + RippleAlphaStep
-        CurrentRippleDiameter := CurrentRippleDiameter + RippleEventParams.rippleDiameterStep
+        if (RippleEventParams.rippleDiameterEnd > RippleEventParams.rippleDiameterStart)
+        {
+            CurrentRippleDiameter := CurrentRippleDiameter + Abs(RippleEventParams.rippleDiameterStep)
+        }
+        else
+        {
+            CurrentRippleDiameter := CurrentRippleDiameter - Abs(RippleEventParams.rippleDiameterStep)
+        }
         AlreadyDrawnRipples++
         if (AlreadyDrawnRipples >= TotalCountOfRipples)
         {

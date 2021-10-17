@@ -127,8 +127,15 @@ CheckToDrawNextClickEvent()
         local clonedRegion := DllCall("CreateRectRgn", "int", 0, "int", 0, "int", 0, "int", 0)
         local RegionType := DllCall("GetWindowRgn", "uint", ClickRippleWindowHwnd, "uint", clonedRegion)
         AlreadyCreatedRegionForRipples[regionKey] := clonedRegion 
-        CurrentRippleAlpha := CurrentRippleAlpha + RippleAlphaStep
-        CurrentRippleDiameter := CurrentRippleDiameter + RippleEventParams.rippleDiameterStep 
+        CurrentRippleAlpha := CurrentRippleAlpha + RippleAlphaStep        
+        if (RippleEventParams.rippleDiameterEnd > RippleEventParams.rippleDiameterStart)
+        {
+            CurrentRippleDiameter := CurrentRippleDiameter + Abs(RippleEventParams.rippleDiameterStep)
+        }
+        else
+        {
+            CurrentRippleDiameter := CurrentRippleDiameter - Abs(RippleEventParams.rippleDiameterStep)
+        }
         AlreadyDrawnRipples++
         if (AlreadyDrawnRipples >= TotalCountOfRipples)
         {
