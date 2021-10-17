@@ -1,1 +1,2 @@
-[![Tutorial](https://youtu.be/lpEFMcIbyjg)](https://youtu.be/lpEFMcIbyjg "Tutorial")
+[![Tutorial](https://i.imgur.com/M0gb5HP.png)]
+(https://youtu.be/lpEFMcIbyjg "Tutorial")
