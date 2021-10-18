@@ -7,5 +7,5 @@
 ; drawn by MouseClickRipple.ahk are rounder than those drawn by MouseClickRippleWithGui.ahk.
 ; However, in my testing MouseClickRipple.ahk may cause problems to some programs -- they cannot respond to mouse clicking events correctly (e.g. DaVinci Resolve 17).
 ; But I haven't run into issues with MouseClickRippleWithGui.ahk, so MouseClickRippleWithGui.ahk seems to have better compatibility than MouseClickRipple.ahk.
-#Include ./MouseClickRippleWithGui.ahk
-; #Include ./MouseClickRipple.ahk
+; #Include ./MouseClickRippleWithGui.ahk
+#Include ./MouseClickRipple.ahk
