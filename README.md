@@ -19,6 +19,7 @@ To add KeyStroke ODS to a second monitor, you can launch two processes of this p
 
 * Step 1. Copy all files of this program into a new folder.
 <br>
+
 * Step 2. Go to the new folder and open "settings.ini", then find these lines:
 <pre>
 	[cursorSpotlight]
