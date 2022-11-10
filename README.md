@@ -90,4 +90,4 @@ Go back to the original folder of this program and double click "Start.ahk" to l
 
 
 # Buy Me a Coffee?
-### Donate via [PayPal](https://www.paypal.com/donate/?business=JY46S54HME9LQ&no_recurring=0&item_name=Buy+the+Hard+Working+Developer+a+cup+of+coffee+or+tea+%3A%29&currency_code=USD)
+### Donate via [PayPal](https://www.paypal.com/donate/?business=JY46S54HME9LQ&no_recurring=0&currency_code=USD)
